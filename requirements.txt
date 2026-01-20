@@ -1,0 +1,14 @@
+# RSS parsing
+feedparser>=6.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# YAML config
+pyyaml>=6.0
+
+# Date handling
+python-dateutil>=2.8.0
+
+# Environment variables
+python-dotenv>=1.0.0

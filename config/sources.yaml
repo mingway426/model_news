@@ -1,0 +1,25 @@
+# RSS 数据源配置
+rss_sources:
+  - name: 机器之心
+    url: https://www.jiqizhixin.com/rss
+    enabled: true
+
+  - name: 36Kr
+    url: https://36kr.com/feed
+    enabled: true
+
+  - name: 新智元
+    url: https://plink.anyfeeder.com/weixin/AI_era
+    enabled: true  # 第三方转换，可能不稳定
+
+# 默认搜索主题（可通过环境变量 SEARCH_TOPICS 覆盖）
+default_topics:
+  - 智谱
+  - GLM
+  - ChatGLM
+  - MiniMax
+  - Kimi
+  - 月之暗面
+  - Moonshot
+  - DeepSeek
+  - 大模型
