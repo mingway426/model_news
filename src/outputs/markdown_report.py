@@ -96,8 +96,13 @@ class MarkdownReport:
         if not articles:
             lines.append("暂无相关资讯。")
         else:
-            for article in articles:
+            # 只显示前 10 篇文章
+            for article in articles[:10]:
                 lines.extend(self._format_article(article))
+
+            if len(articles) > 10:
+                lines.append(f"*... 共 {len(articles)} 篇相关资讯，以上为精选 10 篇*")
+                lines.append("")
 
         lines.extend([
             "",
