@@ -59,36 +59,47 @@ class TimeFilter:
 class KeywordFilter:
     """基于关键词过滤文章"""
 
-    # 默认大模型相关关键词
+    # 默认关键词 - 聚焦 AI 大模型、Agent、AI 核心领域
     DEFAULT_TOPICS = [
-        # 国产模型品牌
+        # 国产大模型品牌
         "DeepSeek", "深度求索",
-        "Qwen", "通义千问", "阿里云",
+        "Qwen", "通义千问",
         "GLM", "智谱", "ChatGLM",
         "Kimi", "Moonshot", "月之暗面",
-        "豆包", "字节", "火山引擎",
-        "文心一言", "百度", "ERNIE",
-        "混元", "腾讯",
+        "豆包",
+        "文心一言", "ERNIE",
+        "混元",
         "MiniMax", "海螺",
         "百川", "Baichuan",
-        "零一万物", "Yi",
-        "阶跃星辰", "Step",
-        "商汤", "SenseChat",
-        # 国际模型
-        "GPT", "OpenAI", "ChatGPT",
+        "零一万物",
+        "阶跃星辰",
+        # 国际大模型品牌
+        "GPT-", "OpenAI", "ChatGPT",
         "Claude", "Anthropic",
-        "Gemini", "Google",
-        "Llama", "Meta",
-        # 通用 AI 关键词
+        "Gemini",
+        "Llama",
+        "Mistral",
+        "Grok",
+        # 大模型核心术语
         "大模型", "LLM", "大语言模型",
-        "AI", "人工智能", "机器学习",
         "AGI", "通用人工智能",
-        "推理模型", "Reasoning",
-        "多模态", "视觉语言",
+        "推理模型", "o1", "o3",
+        "多模态模型",
+        "Transformer",
+        "预训练", "微调", "Fine-tune",
+        "RLHF", "SFT",
+        "MoE", "混合专家",
+        # Agent 相关
         "AI Agent", "智能体",
-        "RAG", "向量数据库",
-        "微调", "Fine-tune",
-        "RLHF", "强化学习",
+        "Agent", "Agentic",
+        "MCP", "函数调用", "Function Call",
+        "工具调用", "Tool Use",
+        "RAG", "检索增强",
+        "Workflow", "工作流",
+        # AI 应用
+        "AI编程", "AI代码", "Copilot",
+        "Cursor", "Claude Code",
+        "AI助手", "AI对话",
     ]
 
     def __init__(self, topics: Optional[List[str]] = None):
