@@ -1,9 +1,13 @@
 """飞书 Webhook 通知"""
 
 import os
+import json
 import requests
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+
+# 飞书消息大小限制 (预留一些余量)
+MAX_CARD_SIZE = 25000  # 25KB，留 5KB 余量
 
 
 class FeishuNotifier:
@@ -26,7 +30,7 @@ class FeishuNotifier:
         leaderboard: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
-        发送日报通知
+        发送日报通知（自动分批发送）
 
         Args:
             summary: AI 生成的总结
@@ -41,9 +45,21 @@ class FeishuNotifier:
             print("[Feishu] Webhook URL 未配置，跳过通知")
             return False
 
-        # 构建卡片消息
-        card = self._build_card(summary, articles, report_url, leaderboard)
+        # 分批发送
+        cards = self._build_cards_batched(summary, articles, report_url, leaderboard)
 
+        success = True
+        for i, card in enumerate(cards, 1):
+            if len(cards) > 1:
+                print(f"[Feishu] 发送第 {i}/{len(cards)} 条消息...")
+
+            if not self._send_card(card):
+                success = False
+
+        return success
+
+    def _send_card(self, card: Dict[str, Any]) -> bool:
+        """发送单张卡片"""
         payload = {"msg_type": "interactive", "card": card}
 
         try:
@@ -63,6 +79,43 @@ class FeishuNotifier:
         except Exception as e:
             print(f"[Feishu] 通知发送异常: {e}")
             return False
+
+    def _build_cards_batched(
+        self,
+        summary: str,
+        articles: List[Dict[str, Any]],
+        report_url: Optional[str] = None,
+        leaderboard: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        构建卡片消息（如果超过大小限制则分批）
+
+        Returns:
+            卡片列表
+        """
+        # 先尝试构建完整卡片
+        full_card = self._build_card(summary, articles[:5], report_url, leaderboard)
+        card_size = len(json.dumps(full_card, ensure_ascii=False))
+
+        if card_size <= MAX_CARD_SIZE:
+            print(f"[Feishu] 消息大小: {card_size/1000:.1f}KB，单条发送")
+            return [full_card]
+
+        # 超过限制，分批发送
+        print(f"[Feishu] 消息大小: {card_size/1000:.1f}KB，超过限制，分批发送")
+        cards = []
+
+        # 第一条：总结 + 排行榜
+        card1 = self._build_card(summary, [], None, leaderboard)
+        cards.append(card1)
+
+        # 第二条：资讯列表
+        card2 = self._build_card("", articles[:5], report_url, None)
+        # 修改标题
+        card2["header"]["title"]["content"] = f"📰 详细资讯 ({len(articles)} 条)"
+        cards.append(card2)
+
+        return cards
 
     def _build_card(
         self,
