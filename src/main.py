@@ -133,7 +133,7 @@ def main():
         notifier = FeishuNotifier(webhook_url=feishu_webhook)
         # 可以配置 GitHub Pages 链接
         report_url = os.environ.get("REPORT_URL")
-        notifier.send_report(summary, articles, report_url)
+        notifier.send_report(summary, articles, report_url, leaderboard=leaderboard_data)
     else:
         print("[Info] 飞书 Webhook 未配置，跳过通知")
 

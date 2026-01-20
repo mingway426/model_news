@@ -23,6 +23,7 @@ class FeishuNotifier:
         summary: str,
         articles: List[Dict[str, Any]],
         report_url: Optional[str] = None,
+        leaderboard: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         发送日报通知
@@ -31,6 +32,7 @@ class FeishuNotifier:
             summary: AI 生成的总结
             articles: 文章列表
             report_url: 日报链接（GitHub Pages 或仓库链接）
+            leaderboard: 排行榜数据
 
         Returns:
             是否发送成功
@@ -40,7 +42,7 @@ class FeishuNotifier:
             return False
 
         # 构建卡片消息
-        card = self._build_card(summary, articles, report_url)
+        card = self._build_card(summary, articles, report_url, leaderboard)
 
         payload = {"msg_type": "interactive", "card": card}
 
@@ -67,6 +69,7 @@ class FeishuNotifier:
         summary: str,
         articles: List[Dict[str, Any]],
         report_url: Optional[str] = None,
+        leaderboard: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         构建飞书卡片消息
@@ -75,6 +78,7 @@ class FeishuNotifier:
             summary: AI 总结
             articles: 文章列表
             report_url: 日报链接
+            leaderboard: 排行榜数据
 
         Returns:
             卡片消息结构
@@ -93,28 +97,54 @@ class FeishuNotifier:
         # 2. 分隔线
         elements.append({"tag": "hr"})
 
-        # 3. 资讯列表（最多显示 5 条）
+        # 3. 排行榜（如果有）
+        if leaderboard:
+            leaderboard_content = self._format_leaderboard(leaderboard)
+            if leaderboard_content:
+                elements.append({
+                    "tag": "markdown",
+                    "content": leaderboard_content,
+                })
+                elements.append({"tag": "hr"})
+
+        # 4. 资讯列表（展开显示，最多 5 条）
         if articles:
-            article_lines = ["**📰 详细资讯**\n"]
+            elements.append({
+                "tag": "markdown",
+                "content": "**📰 详细资讯**",
+            })
+
             for article in articles[:5]:
                 title = article.get("title", "无标题")
                 link = article.get("link", "")
                 source = article.get("source", "")
-                if link:
-                    article_lines.append(f"• [{title}]({link}) *{source}*")
-                else:
-                    article_lines.append(f"• {title} *{source}*")
+                summary_text = article.get("summary", "")[:150]  # 截取摘要
+                pub_time = ""
+                if article.get("published"):
+                    pub_time = article["published"].strftime("%H:%M")
+
+                # 每篇文章一个 markdown 块
+                article_content = f"**[{title}]({link})**\n"
+                article_content += f"*{source}*"
+                if pub_time:
+                    article_content += f" | *{pub_time}*"
+                if summary_text:
+                    article_content += f"\n{summary_text}..."
+
+                elements.append({
+                    "tag": "markdown",
+                    "content": article_content,
+                })
 
             if len(articles) > 5:
-                article_lines.append(f"\n*... 共 {len(articles)} 条资讯*")
+                elements.append({
+                    "tag": "markdown",
+                    "content": f"*... 共 {len(articles)} 条资讯*",
+                })
 
-            elements.append({
-                "tag": "markdown",
-                "content": "\n".join(article_lines),
-            })
-
-        # 4. 查看完整日报按钮
+        # 5. 查看完整日报按钮
         if report_url:
+            elements.append({"tag": "hr"})
             elements.append({
                 "tag": "action",
                 "actions": [
@@ -141,6 +171,37 @@ class FeishuNotifier:
         }
 
         return card
+
+    def _format_leaderboard(self, leaderboard: Dict[str, Any]) -> str:
+        """格式化排行榜为飞书 markdown"""
+        lines = ["**📊 国产模型排行榜 (LM Arena)**\n"]
+
+        # 全球 Top 5
+        top_global = leaderboard.get("top_global", [])
+        if top_global:
+            lines.append("**全球 Top 5**")
+            for model in top_global[:5]:
+                name = model.get("model_name", "Unknown")
+                if len(name) > 30:
+                    name = name[:27] + "..."
+                elo = model.get("elo_score", 0)
+                rank = model.get("rank", "-")
+                lines.append(f"{rank}. {name} ({elo:.0f})")
+            lines.append("")
+
+        # 国产模型
+        chinese_models = leaderboard.get("chinese_models", [])
+        if chinese_models:
+            lines.append("**国产模型 Top 5**")
+            for model in chinese_models[:5]:
+                name = model.get("model_name", "Unknown")
+                if len(name) > 30:
+                    name = name[:27] + "..."
+                elo = model.get("elo_score", 0)
+                rank = model.get("rank", "-")
+                lines.append(f"#{rank} {name} ({elo:.0f})")
+
+        return "\n".join(lines)
 
     def send_text(self, text: str) -> bool:
         """
