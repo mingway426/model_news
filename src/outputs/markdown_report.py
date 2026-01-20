@@ -161,7 +161,7 @@ class MarkdownReport:
                 lines.append(f"| {rank} | {name} | {elo:.0f} |")
 
             lines.append("")
-            lines.append(f"*数据来源: {leaderboard.get('source', 'LM Arena')} | 更新时间: {leaderboard.get('updated_at', '-')}*")
+            lines.append(f"*数据来源: [{leaderboard.get('source', 'LM Arena')}](https://lmarena.ai/) | [原始数据](https://github.com/nakasyou/lmarena-history) | 更新时间: {leaderboard.get('updated_at', '-')}*")
             lines.append("")
         else:
             lines.append("暂无排行榜数据。")
