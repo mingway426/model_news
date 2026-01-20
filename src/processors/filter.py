@@ -1,8 +1,59 @@
-"""Keyword Filter - 关键词过滤"""
+"""Keyword Filter - 关键词过滤和时间过滤"""
 
 import os
 import json
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+
+
+class TimeFilter:
+    """基于时间过滤文章"""
+
+    def __init__(self, hours: int = 24):
+        """
+        初始化时间过滤器
+
+        Args:
+            hours: 保留最近多少小时内的文章，默认 24 小时
+        """
+        self.hours = hours
+
+    def filter(self, articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        过滤指定时间范围内的文章
+
+        Args:
+            articles: 原始文章列表
+
+        Returns:
+            时间范围内的文章列表
+        """
+        if not articles:
+            return []
+
+        cutoff_time = datetime.now() - timedelta(hours=self.hours)
+        filtered = []
+        no_date_count = 0
+
+        for article in articles:
+            pub_date = article.get("published")
+            if pub_date is None:
+                # 没有发布时间的文章保留（可能是解析问题）
+                no_date_count += 1
+                filtered.append(article)
+            else:
+                # 处理时区问题：将 offset-aware datetime 转换为 offset-naive
+                if pub_date.tzinfo is not None:
+                    pub_date = pub_date.replace(tzinfo=None)
+                if pub_date >= cutoff_time:
+                    filtered.append(article)
+
+        excluded = len(articles) - len(filtered)
+        print(f"[TimeFilter] 保留 {self.hours} 小时内文章: {len(filtered)}/{len(articles)} 篇（排除 {excluded} 篇过时文章）")
+        if no_date_count > 0:
+            print(f"[TimeFilter] 注意: {no_date_count} 篇文章无发布时间，已保留")
+
+        return filtered
 
 
 class KeywordFilter:

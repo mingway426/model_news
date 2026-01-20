@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 # 添加项目根目录到 path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.fetchers import Aggregator
-from src.processors import Deduplicator, KeywordFilter
+from src.fetchers import Aggregator, LMArenaFetcher
+from src.processors import Deduplicator, KeywordFilter, TimeFilter
 from src.summarizer import Summarizer
 from src.outputs import MarkdownReport, FeishuNotifier
 
@@ -53,7 +53,7 @@ def main():
     print(f"  - 飞书 Webhook: {'已配置' if feishu_webhook else '未配置'}")
     print(f"  - 搜索主题: {topics if topics else '使用默认配置'}")
 
-    # 1. 抓取数据
+    # 1. 抓取资讯
     print("\n" + "=" * 50)
     print("步骤 1: 抓取资讯")
     print("=" * 50)
@@ -65,6 +65,20 @@ def main():
         print("\n未抓取到任何文章，程序退出")
         return
 
+    # 1.5 抓取排行榜数据
+    print("\n" + "=" * 50)
+    print("步骤 1.5: 获取模型排行榜")
+    print("=" * 50)
+
+    leaderboard_data = None
+    try:
+        lmarena_fetcher = LMArenaFetcher()
+        leaderboard_data = lmarena_fetcher.get_leaderboard_summary(top_n=10)
+        chinese_count = len(leaderboard_data.get("chinese_models", []))
+        print(f"[Leaderboard] 获取到 {chinese_count} 个国产模型排名")
+    except Exception as e:
+        print(f"[Leaderboard] 获取失败: {e}")
+
     # 2. 数据处理
     print("\n" + "=" * 50)
     print("步骤 2: 数据处理")
@@ -73,6 +87,10 @@ def main():
     # 去重
     deduplicator = Deduplicator()
     articles = deduplicator.deduplicate(articles)
+
+    # 时间过滤（只保留最近 24 小时内的文章）
+    time_filter = TimeFilter(hours=24)
+    articles = time_filter.filter(articles)
 
     # 关键词过滤
     keyword_filter = KeywordFilter(topics=topics)
@@ -104,7 +122,7 @@ def main():
     print("=" * 50)
 
     report = MarkdownReport()
-    report_path = report.generate(articles, summary)
+    report_path = report.generate(articles, summary, leaderboard=leaderboard_data)
 
     # 5. 发送通知
     print("\n" + "=" * 50)

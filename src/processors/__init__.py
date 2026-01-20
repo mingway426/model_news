@@ -1,4 +1,4 @@
 from .dedup import Deduplicator
-from .filter import KeywordFilter
+from .filter import KeywordFilter, TimeFilter
 
-__all__ = ["Deduplicator", "KeywordFilter"]
+__all__ = ["Deduplicator", "KeywordFilter", "TimeFilter"]

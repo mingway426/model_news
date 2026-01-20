@@ -12,3 +12,7 @@ python-dateutil>=2.8.0
 
 # Environment variables
 python-dotenv>=1.0.0
+
+# Hugging Face datasets (for leaderboard)
+datasets>=2.14.0
+huggingface-hub>=0.17.0

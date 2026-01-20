@@ -27,6 +27,7 @@ class MarkdownReport:
         articles: List[Dict[str, Any]],
         summary: str,
         date: datetime = None,
+        leaderboard: Dict[str, Any] = None,
     ) -> str:
         """
         生成日报并保存
@@ -35,6 +36,7 @@ class MarkdownReport:
             articles: 文章列表
             summary: AI 生成的总结
             date: 日期，默认今天
+            leaderboard: 排行榜数据
 
         Returns:
             生成的文件路径
@@ -46,7 +48,7 @@ class MarkdownReport:
         filename = f"{date_str}.md"
         filepath = os.path.join(self.output_dir, filename)
 
-        content = self._build_content(articles, summary, date_str)
+        content = self._build_content(articles, summary, date_str, leaderboard)
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
@@ -59,6 +61,7 @@ class MarkdownReport:
         articles: List[Dict[str, Any]],
         summary: str,
         date_str: str,
+        leaderboard: Dict[str, Any] = None,
     ) -> str:
         """
         构建 Markdown 内容
@@ -67,6 +70,7 @@ class MarkdownReport:
             articles: 文章列表
             summary: AI 总结
             date_str: 日期字符串
+            leaderboard: 排行榜数据
 
         Returns:
             Markdown 内容
@@ -76,11 +80,18 @@ class MarkdownReport:
             "",
             summary,
             "",
+        ]
+
+        # 添加排行榜板块
+        if leaderboard:
+            lines.extend(self._format_leaderboard(leaderboard))
+
+        lines.extend([
             "---",
             "",
             "## 详细资讯",
             "",
-        ]
+        ])
 
         if not articles:
             lines.append("暂无相关资讯。")
@@ -96,6 +107,67 @@ class MarkdownReport:
         ])
 
         return "\n".join(lines)
+
+    def _format_leaderboard(self, leaderboard: Dict[str, Any]) -> List[str]:
+        """
+        格式化排行榜数据
+
+        Args:
+            leaderboard: 排行榜数据
+
+        Returns:
+            Markdown 行列表
+        """
+        lines = [
+            "---",
+            "",
+            "## 国产模型排行榜 (LM Arena)",
+            "",
+        ]
+
+        chinese_models = leaderboard.get("chinese_models", [])
+        top_global = leaderboard.get("top_global", [])
+
+        # 显示全球 Top 5
+        if top_global:
+            lines.append("### 全球 Top 5")
+            lines.append("")
+            lines.append("| 排名 | 模型 | ELO 分数 |")
+            lines.append("|-----|------|---------|")
+
+            for model in top_global[:5]:
+                name = model.get("model_name", "Unknown")
+                if len(name) > 45:
+                    name = name[:42] + "..."
+                elo = model.get("elo_score", 0)
+                rank = model.get("rank", "-")
+                lines.append(f"| {rank} | {name} | {elo:.0f} |")
+
+            lines.append("")
+
+        # 显示国产模型排名
+        if chinese_models:
+            lines.append("### 国产模型排名")
+            lines.append("")
+            lines.append("| 全球排名 | 模型 | ELO 分数 |")
+            lines.append("|---------|------|---------|")
+
+            for model in chinese_models[:10]:
+                name = model.get("model_name", "Unknown")
+                if len(name) > 45:
+                    name = name[:42] + "..."
+                elo = model.get("elo_score", 0)
+                rank = model.get("rank", "-")
+                lines.append(f"| {rank} | {name} | {elo:.0f} |")
+
+            lines.append("")
+            lines.append(f"*数据来源: {leaderboard.get('source', 'LM Arena')} | 更新时间: {leaderboard.get('updated_at', '-')}*")
+            lines.append("")
+        else:
+            lines.append("暂无排行榜数据。")
+            lines.append("")
+
+        return lines
 
     def _format_article(self, article: Dict[str, Any]) -> List[str]:
         """
