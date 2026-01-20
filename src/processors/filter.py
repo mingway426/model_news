@@ -59,14 +59,46 @@ class TimeFilter:
 class KeywordFilter:
     """基于关键词过滤文章"""
 
+    # 默认大模型相关关键词
+    DEFAULT_TOPICS = [
+        # 国产模型品牌
+        "DeepSeek", "深度求索",
+        "Qwen", "通义千问", "阿里云",
+        "GLM", "智谱", "ChatGLM",
+        "Kimi", "Moonshot", "月之暗面",
+        "豆包", "字节", "火山引擎",
+        "文心一言", "百度", "ERNIE",
+        "混元", "腾讯",
+        "MiniMax", "海螺",
+        "百川", "Baichuan",
+        "零一万物", "Yi",
+        "阶跃星辰", "Step",
+        "商汤", "SenseChat",
+        # 国际模型
+        "GPT", "OpenAI", "ChatGPT",
+        "Claude", "Anthropic",
+        "Gemini", "Google",
+        "Llama", "Meta",
+        # 通用 AI 关键词
+        "大模型", "LLM", "大语言模型",
+        "AI", "人工智能", "机器学习",
+        "AGI", "通用人工智能",
+        "推理模型", "Reasoning",
+        "多模态", "视觉语言",
+        "AI Agent", "智能体",
+        "RAG", "向量数据库",
+        "微调", "Fine-tune",
+        "RLHF", "强化学习",
+    ]
+
     def __init__(self, topics: Optional[List[str]] = None):
         """
         初始化过滤器
 
         Args:
-            topics: 关键词列表，如果为空则从环境变量 SEARCH_TOPICS 读取
+            topics: 关键词列表，如果为空则从环境变量或默认列表读取
         """
-        self.topics = topics or self._load_topics_from_env()
+        self.topics = topics or self._load_topics_from_env() or self.DEFAULT_TOPICS
 
     def _load_topics_from_env(self) -> List[str]:
         """从环境变量加载搜索主题"""
