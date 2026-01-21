@@ -36,11 +36,3 @@ jobs:
           SEARCH_TOPICS: ${{ secrets.SEARCH_TOPICS }}
         run: |
           python src/main.py
-
-      - name: Commit and push report
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add output/
-          git diff --staged --quiet || git commit -m "Add daily report for $(date +%Y-%m-%d)"
-          git push
