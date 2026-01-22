@@ -253,6 +253,11 @@ class FeishuNotifier:
                 elo = model.get("elo_score", 0)
                 rank = model.get("rank", "-")
                 lines.append(f"#{rank} {name} ({elo:.0f})")
+            lines.append("")
+
+        # 添加数据来源链接
+        updated_at = leaderboard.get("updated_at", "-")
+        lines.append(f"*数据来源: [LM Arena](https://lmarena.ai/) | [原始数据](https://github.com/nakasyou/lmarena-history) | 更新: {updated_at}*")
 
         return "\n".join(lines)
 
